@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="支持 Excel 导入的幸运观众抽奖工具" />
+    <title>幸运观众抽奖</title>
+    <link rel="stylesheet" href="assets/styles.css" />
+    <script src="assets/xlsx.full.min.js"></script>
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="page-header">
+        <p class="eyebrow">活动现场 · 幸运观众</p>
+        <h1>幸运观众抽奖</h1>
+        <p class="lead">导入 Excel 名单，公平随机抽取幸运观众。</p>
+      </header>
+
+      <div class="layout">
+        <section class="card import-card" aria-labelledby="import-title">
+          <div class="section-heading">
+            <span class="step">01</span>
+            <div>
+              <h2 id="import-title">导入观众名单</h2>
+              <p>支持 .xlsx、.xls 和 .csv 文件。</p>
+            </div>
+          </div>
+
+          <label class="drop-zone" for="file-input" id="drop-zone">
+            <input id="file-input" type="file" accept=".xlsx,.xls,.csv" />
+            <span class="upload-icon" aria-hidden="true">↑</span>
+            <strong>选择 Excel 文件</strong>
+            <span>或将文件拖到这里</span>
+          </label>
+          <p class="hint">第一行建议使用列名：<code>姓名</code>、<code>学号</code>。程序会自动识别；没有列名时默认读取前两列。</p>
+
+          <div class="file-summary" id="file-summary" hidden aria-live="polite">
+            <span class="summary-dot" aria-hidden="true"></span>
+            <span id="file-summary-text"></span>
+          </div>
+
+          <details class="manual-entry">
+            <summary>没有 Excel？手动粘贴名单</summary>
+            <label class="sr-only" for="manual-list">观众名单</label>
+            <textarea id="manual-list" placeholder="每行一位观众，可用逗号或制表符分隔姓名和学号&#10;例如：&#10;张三,20260001&#10;李四,20260002"></textarea>
+            <div class="manual-actions">
+              <button class="button button-secondary" id="apply-manual" type="button">使用此名单</button>
+              <button class="button button-quiet" id="load-sample" type="button">载入示例</button>
+              <button class="button button-quiet" id="clear-list" type="button">清空</button>
+            </div>
+          </details>
+
+          <div class="privacy-note">
+            <span aria-hidden="true">⌁</span>
+            名单只在当前浏览器中处理，不会上传或保存。
+          </div>
+        </section>
+
+        <section class="card lottery-card" aria-labelledby="lottery-title">
+          <div class="lottery-toolbar">
+            <div>
+              <div class="section-heading compact">
+                <span class="step">02</span>
+                <div>
+                  <h2 id="lottery-title">开始抽奖</h2>
+                  <p id="participant-count">请先导入名单</p>
+                </div>
+              </div>
+            </div>
+            <label class="winner-count-label" for="winner-count">
+              本轮人数
+              <input id="winner-count" type="number" min="1" max="10" value="3" inputmode="numeric" />
+            </label>
+          </div>
+
+          <div class="results" id="results" aria-live="polite" aria-label="抽奖结果">
+            <div class="empty-results" id="empty-results">
+              <span class="empty-icon" aria-hidden="true">✦</span>
+              <p>导入名单后，点击开始抽奖</p>
+            </div>
+          </div>
+
+          <div class="draw-options">
+            <label class="checkbox-label">
+              <input id="exclude-winners" type="checkbox" checked />
+              后续抽奖排除已中奖观众
+            </label>
+            <button class="text-button" id="reset-history" type="button" disabled>重置中奖记录</button>
+          </div>
+
+          <button class="button button-primary draw-button" id="draw-button" type="button" disabled>
+            开始抽奖
+          </button>
+          <p class="status" id="status" role="status">等待导入名单</p>
+        </section>
+      </div>
+
+      <footer>纯前端工具 · 可部署到 GitHub Pages</footer>
+    </main>
+    <script src="assets/app.js"></script>
+  </body>
+</html>
