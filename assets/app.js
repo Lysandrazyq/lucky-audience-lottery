@@ -161,7 +161,7 @@ function parseSheetRows(rows) {
 async function importFile(file) {
   if (!file) return;
   if (!window.XLSX) {
-    setStatus("Excel 解析组件未加载，请确认网络连接后刷新页面再试。");
+    setStatus("Excel 解析组件未正确加载，请刷新页面后重试。");
     return;
   }
 
