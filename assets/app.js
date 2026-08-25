@@ -6,6 +6,7 @@ const GROUPS = [
   { key: "junior3", label: "初三＋四高一", shortLabel: "初三＋四高一" },
   { key: "senior1", label: "高一", shortLabel: "高一" },
 ];
+const WINNERS_PER_GROUP = 3;
 
 const fileInput = document.querySelector("#file-input");
 const dropZone = document.querySelector("#drop-zone");
@@ -152,14 +153,14 @@ function updateInterface() {
     const groupPool = excludeWinners.checked
       ? pools[group.key].filter((person) => !winnerKeys.has(person.key))
       : pools[group.key];
-    return groupPool.length > 0;
+    return groupPool.length >= WINNERS_PER_GROUP;
   });
   drawButton.disabled = !everyGroupReady;
   resetHistoryButton.disabled = winnerKeys.size === 0;
   updateGroupSummary();
 }
 
-function renderPlaceholders(message = "等待抽取") {
+function renderPlaceholders(message = "每组抽取 3 人") {
   results.replaceChildren();
   GROUPS.forEach((group) => {
     const card = document.createElement("article");
@@ -189,15 +190,27 @@ function renderWinners(winners) {
     rank.className = "winner-rank";
     rank.textContent = winner.groupLabel;
 
-    const name = document.createElement("strong");
-    name.className = "winner-name";
-    name.textContent = winner.name;
+    const list = document.createElement("div");
+    list.className = "winner-list";
+    winner.members.forEach((person, personIndex) => {
+      const row = document.createElement("div");
+      row.className = "winner-person";
+      const number = document.createElement("span");
+      number.className = "winner-number";
+      number.textContent = String(personIndex + 1);
+      const personText = document.createElement("div");
+      const name = document.createElement("strong");
+      name.className = "winner-person-name";
+      name.textContent = person.name;
+      const id = document.createElement("span");
+      id.className = "winner-person-id";
+      id.textContent = person.id ? `学号：${person.id}` : "";
+      personText.append(name, id);
+      row.append(number, personText);
+      list.append(row);
+    });
 
-    const id = document.createElement("span");
-    id.className = "winner-id";
-    id.textContent = winner.id ? `学号：${winner.id}` : "";
-
-    card.append(rank, name, id);
+    card.append(rank, list);
     results.append(card);
   });
 }
@@ -274,11 +287,15 @@ function drawWinners() {
     const pool = excludeWinners.checked
       ? pools[group.key].filter((person) => !winnerKeys.has(person.key))
       : pools[group.key];
-    if (!pool.length) {
-      setStatus(`${group.label} 没有可抽取的观众，请重置中奖记录或重新导入。`);
+    if (pool.length < WINNERS_PER_GROUP) {
+      setStatus(`${group.label} 剩余人数不足 ${WINNERS_PER_GROUP} 人，请重置中奖记录或重新导入。`);
       return;
     }
-    winners.push({ ...shuffle(pool)[0], groupKey: group.key, groupLabel: group.label });
+    winners.push({
+      groupKey: group.key,
+      groupLabel: group.label,
+      members: shuffle(pool).slice(0, WINNERS_PER_GROUP),
+    });
   }
 
   drawButton.disabled = true;
@@ -286,13 +303,15 @@ function drawWinners() {
   setStatus("正在从四组名单中随机抽取…");
 
   window.setTimeout(() => {
-    if (excludeWinners.checked) winners.forEach((winner) => winnerKeys.add(winner.key));
+    if (excludeWinners.checked) {
+      winners.forEach((winner) => winner.members.forEach((person) => winnerKeys.add(person.key)));
+    }
     lastWinners = winners;
     renderWinners(winners);
     copyResultButton.disabled = false;
     updateInterface();
     drawButton.textContent = "开始下一轮抽奖";
-    setStatus("抽奖完成！每组各抽取 1 位幸运观众。");
+    setStatus("抽奖完成！每组各抽取 3 位，共 12 位幸运观众。");
   }, 420);
 }
 
@@ -334,7 +353,7 @@ function createResultCanvas() {
   context.fillText("本轮抽取结果", 800, 192);
 
   const cardWidth = 340;
-  const cardHeight = 420;
+  const cardHeight = 440;
   const gap = 28;
   const startX = (1600 - cardWidth * 4 - gap * 3) / 2;
   const cardY = 270;
@@ -352,14 +371,16 @@ function createResultCanvas() {
 
     context.fillStyle = "#315fd3";
     context.font = '700 28px "Microsoft YaHei", "PingFang SC", sans-serif';
-    context.fillText(winner.groupLabel, x + cardWidth / 2, cardY + 80);
+    context.fillText(winner.groupLabel, x + cardWidth / 2, cardY + 62);
 
-    context.fillStyle = "#1e377b";
-    drawFittedText(context, winner.name, x + cardWidth / 2, cardY + 225, cardWidth - 48, 52, 30);
-
-    context.fillStyle = "#72809a";
-    context.font = '400 23px "Microsoft YaHei", "PingFang SC", sans-serif';
-    context.fillText(winner.id ? `学号：${winner.id}` : "", x + cardWidth / 2, cardY + 300);
+    winner.members.forEach((person, personIndex) => {
+      const nameY = cardY + 145 + personIndex * 105;
+      context.fillStyle = "#1e377b";
+      drawFittedText(context, person.name, x + cardWidth / 2, nameY, cardWidth - 50, 34, 24);
+      context.fillStyle = "#72809a";
+      context.font = '400 17px "Microsoft YaHei", "PingFang SC", sans-serif';
+      context.fillText(person.id ? `学号：${person.id}` : "", x + cardWidth / 2, nameY + 31);
+    });
   });
 
   context.fillStyle = "#8b96aa";
